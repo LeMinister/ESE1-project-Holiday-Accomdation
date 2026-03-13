@@ -1,10 +1,25 @@
 import React from "react";
-import Home from "./pages/Home";
+
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Properties from "./pages/Properties";
+import ManageBooking from "./pages/ManageBooking";
 
 function App() {
+
   return (
     <div>
-      <Home />
+
+      <h1>Holiday Booking System</h1>
+
+      <Properties />
+
+      <Login />
+
+      <Register />
+
+      <ManageBooking />
+
     </div>
   );
 }
