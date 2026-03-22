@@ -1,0 +1,45 @@
+.property-card {
+  display: flex;
+  border: 2px solid #001f3f; /* navy */
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.property-image {
+  width: 250px;
+  height: 180px;
+  object-fit: cover;
+}
+
+.property-info {
+  padding: 15px;
+  flex: 1;
+}
+
+.property-info h3 {
+  color: #ff6600; /* orange */
+  margin-bottom: 10px;
+}
+
+.price {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #001f3f;
+}
+
+.book-btn {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.book-btn:hover {
+  background-color: #e65c00;
+}
