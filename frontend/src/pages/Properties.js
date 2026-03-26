@@ -8,7 +8,7 @@ function Properties() {
 
   // Fetch properties from Django API
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/properties/")
+    fetch("https://super-chainsaw-pjgv7q7v46pjc6g9q-8000.app.github.dev/api/properties")
       .then((response) => response.json())
       .then((data) => {
         setProperties(data);
