@@ -1,34 +1,8 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-import re
+from .models import Property
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
+class PropertySerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ["username", "email", "password"]
-
-    def validate_password(self, value):
-        if len(value) < 8:
-            raise serializers.ValidationError("Password must be at least 8 characters")
-
-        if not re.search(r"\d", value):
-            raise serializers.ValidationError("Must contain a number")
-
-        if not re.search(r"[A-Z]", value):
-            raise serializers.ValidationError("Must contain a capital letter")
-
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
-            raise serializers.ValidationError("Must contain a special character")
-
-        return value
-
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            password=validated_data["password"],  # hashed automatically
-        )
-        return user
+        model = Property
+        fields = "__all__"
