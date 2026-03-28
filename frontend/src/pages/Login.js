@@ -30,7 +30,6 @@ function Login() {
           placeholder="Username"
           onChange={(e) => setForm({ ...form, username: e.target.value })}
         />
-
         <input
           type="password"
           placeholder="Password"
@@ -39,8 +38,6 @@ function Login() {
 
         <button type="submit">Login</button>
       </form>
-
-      <br />
 
       <a href="/forgot-password">Forgot Password?</a>
     </div>

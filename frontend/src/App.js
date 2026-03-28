@@ -1,18 +1,18 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
-import Properties from "./pages/Properties";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Properties />} />
-        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
       </Routes>
     </Router>
   );

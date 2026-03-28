@@ -83,13 +83,10 @@ DATABASES = {
 }
 
 
-# PASSWORD VALIDATION
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -98,10 +95,12 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
     {
-        "NAME": "api.validators.StrongPasswordValidator",
+        "NAME": "api.validators.CustomPasswordValidator",
     },
 ]
 
+# EMAIL (for testing)
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # INTERNATIONALIZATION
 LANGUAGE_CODE = "en-us"
