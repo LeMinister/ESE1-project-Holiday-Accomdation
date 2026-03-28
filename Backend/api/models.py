@@ -1,13 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import User
 import uuid
+from django.contrib.auth.models import User
 
 
 class Property(models.Model):
     PROPERTY_TYPES = [
         ('hotel', 'Hotel'),
-        ('villa', 'Villa'),
         ('studio', 'Studio'),
+        ('villa', 'Villa'),
     ]
 
     name = models.CharField(max_length=200)
@@ -23,13 +23,9 @@ class Property(models.Model):
 
 class Booking(models.Model):
     booking_reference = models.CharField(max_length=20, unique=True, editable=False)
-
     property = models.ForeignKey(Property, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
-    # Optional user account (for registered users)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
-    # Guest details (for non-registered users)
     guest_name = models.CharField(max_length=200)
     guest_email = models.EmailField()
 

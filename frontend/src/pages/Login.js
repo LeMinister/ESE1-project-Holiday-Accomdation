@@ -1,49 +1,48 @@
 import React, { useState } from "react";
 
 function Login() {
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     username: "",
-    password: ""
+    password: "",
   });
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    fetch("http://127.0.0.1:8000/api/login/", {
+    const res = await fetch("http://127.0.0.1:8000/api/login/", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(formData)
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert("Login successful!");
-        console.log(data);
-      })
-      .catch(err => console.error(err));
+      body: JSON.stringify(form),
+    });
+
+    const data = await res.json();
+    alert(JSON.stringify(data));
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div>
       <h2>Login</h2>
 
       <form onSubmit={handleSubmit}>
-        <input name="username" placeholder="Username" onChange={handleChange} required />
-        <br />
+        <input
+          placeholder="Username"
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+        />
 
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-        <br />
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+        />
 
         <button type="submit">Login</button>
       </form>
+
+      <br />
+
+      <a href="/forgot-password">Forgot Password?</a>
     </div>
   );
 }

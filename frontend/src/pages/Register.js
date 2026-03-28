@@ -1,49 +1,47 @@
 import React, { useState } from "react";
 
 function Register() {
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     username: "",
     email: "",
-    password: ""
+    password: "",
   });
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    fetch("http://127.0.0.1:8000/api/register/", {
+    const res = await fetch("http://127.0.0.1:8000/api/register/", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(formData)
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert("Account created successfully!");
-      })
-      .catch(err => console.error(err));
+      body: JSON.stringify(form),
+    });
+
+    const data = await res.json();
+    alert(JSON.stringify(data));
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div>
       <h2>Register</h2>
 
       <form onSubmit={handleSubmit}>
-        <input name="username" placeholder="Username" onChange={handleChange} required />
-        <br />
+        <input
+          placeholder="Username"
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+        />
 
-        <input name="email" placeholder="Email" onChange={handleChange} required />
-        <br />
+        <input
+          placeholder="Email"
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
 
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-        <br />
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+        />
 
         <button type="submit">Register</button>
       </form>
