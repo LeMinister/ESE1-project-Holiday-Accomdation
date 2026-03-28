@@ -7,6 +7,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 
+# ======================
+# FORGOT PASSWORD
+# ======================
 @api_view(["POST"])
 def forgot_password(request):
     email = request.data.get("email")
@@ -22,20 +25,55 @@ def forgot_password(request):
             status=404
         )
 
-    # Generate token
     token = default_token_generator.make_token(user)
     uid = user.pk
 
-    # Frontend reset link
     reset_link = f"http://localhost:3000/reset-password/{uid}/{token}/"
 
-    # Send email
     send_mail(
         subject="Password Reset Request",
         message=f"Click the link to reset your password:\n\n{reset_link}",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
-        fail_silently=False,
     )
 
-    return Response({"message": "Password reset email sent successfully"})
+    return Response({"message": "Password reset email sent"})
+
+
+# ======================
+# RESET PASSWORD
+# ======================
+@api_view(["POST"])
+def reset_password(request):
+    uid = request.data.get("uid")
+    token = request.data.get("token")
+    password = request.data.get("password")
+
+    if not all([uid, token, password]):
+        return Response({"error": "Missing fields"}, status=400)
+
+    try:
+        user = User.objects.get(pk=uid)
+    except User.DoesNotExist:
+        return Response({"error": "Invalid user"}, status=400)
+
+    # Check token
+    if not default_token_generator.check_token(user, token):
+        return Response({"error": "Invalid or expired token"}, status=400)
+
+    # PASSWORD VALIDATION (YOUR RULES)
+    import re
+    if len(password) < 8:
+        return Response({"error": "Password must be at least 8 characters"}, status=400)
+    if not re.search(r"[A-Z]", password):
+        return Response({"error": "Must contain a capital letter"}, status=400)
+    if not re.search(r"[0-9]", password):
+        return Response({"error": "Must contain a number"}, status=400)
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return Response({"error": "Must contain a special character"}, status=400)
+
+    # Set password (HASHED automatically)
+    user.set_password(password)
+    user.save()
+
+    return Response({"message": "Password reset successful"})

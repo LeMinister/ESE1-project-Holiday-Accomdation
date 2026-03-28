@@ -1,38 +1,66 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 function ResetPassword() {
   const { uid, token } = useParams();
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    const res = await fetch(
-      `http://127.0.0.1:8000/api/reset-password/${uid}/${token}/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password }),
-      }
-    );
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
 
-    const data = await res.json();
-    alert(JSON.stringify(data));
+    fetch("http://127.0.0.1:8000/api/reset-password/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        uid,
+        token,
+        password,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          alert(data.error);
+        } else {
+          alert("Password reset successful!");
+          navigate("/login");
+        }
+      })
+      .catch(() => alert("Something went wrong"));
   };
 
   return (
-    <div>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h2>Reset Password</h2>
 
       <form onSubmit={handleSubmit}>
         <input
           type="password"
-          placeholder="New password"
+          placeholder="New Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
+        <br /><br />
+
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+        <br /><br />
 
         <button type="submit">Reset Password</button>
       </form>
