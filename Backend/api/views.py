@@ -1,95 +1,107 @@
-import re
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import generics
+from datetime import datetime
+import uuid
 
-from .models import Property
+from .models import Property, Booking
 from .serializers import PropertySerializer
 
 
-# =========================
-# PROPERTIES (HOME PAGE)
-# =========================
-class PropertyListView(generics.ListAPIView):
-    queryset = Property.objects.all()
-    serializer_class = PropertySerializer
+# 🔹 GET ALL PROPERTIES
+@api_view(["GET"])
+def property_list(request):
+    properties = Property.objects.all()
+    serializer = PropertySerializer(properties, many=True)
+    return Response(serializer.data)
 
 
-# =========================
-# FORGOT PASSWORD
-# =========================
+# 🔹 CREATE BOOKING
+@api_view(["POST"])
+def create_booking(request):
+    user_id = request.data.get("user_id")
+    property_id = request.data.get("property_id")
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("end_date")
+
+    # VALIDATION
+    if not all([user_id, property_id, start_date, end_date]):
+        return Response({"error": "Missing fields"}, status=400)
+
+    try:
+        user = User.objects.get(id=user_id)
+        property = Property.objects.get(id=property_id)
+    except:
+        return Response({"error": "Invalid user or property"}, status=404)
+
+    # CALCULATE DAYS
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.strptime(end_date, "%Y-%m-%d")
+
+    if end <= start:
+        return Response({"error": "End date must be after start date"}, status=400)
+
+    days = (end - start).days
+    total_price = days * property.price_per_night
+
+    # GENERATE REFERENCE
+    reference = str(uuid.uuid4())[:8]
+
+    # CREATE BOOKING
+    booking = Booking.objects.create(
+        user=user,
+        property=property,
+        start_date=start_date,
+        end_date=end_date,
+        total_price=total_price,
+        reference=reference
+    )
+
+    # SEND EMAIL
+    send_mail(
+        subject="Booking Confirmation",
+        message=f"""
+Booking Confirmed!
+
+Property: {property.name}
+Location: {property.location}
+
+Dates: {start_date} to {end_date}
+Total Price: £{total_price}
+
+Reference Number: {reference}
+
+Thank you for booking with us!
+""",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
+
+    return Response({
+        "message": "Booking confirmed! Email sent.",
+        "reference": reference
+    })
+
+
+# 🔹 FORGOT PASSWORD
 @api_view(["POST"])
 def forgot_password(request):
     email = request.data.get("email")
 
-    if not email:
-        return Response({"error": "Email is required"}, status=400)
-
-    try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
-        return Response(
-            {"error": "Email not registered. Please sign up."},
-            status=404
-        )
-
-    token = default_token_generator.make_token(user)
-    uid = user.pk
-
-    reset_link = f"http://localhost:3000/reset-password/{uid}/{token}/"
-
-    send_mail(
-        subject="Password Reset Request",
-        message=f"Click the link below to reset your password:\n\n{reset_link}",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-    )
+    if not User.objects.filter(email=email).exists():
+        return Response({
+            "error": "Email not registered. Please sign up."
+        }, status=400)
 
     return Response({"message": "Password reset email sent"})
 
 
-# =========================
-# RESET PASSWORD
-# =========================
+# 🔹 RESET PASSWORD
 @api_view(["POST"])
 def reset_password(request):
-    uid = request.data.get("uid")
-    token = request.data.get("token")
-    password = request.data.get("password")
-
-    if not all([uid, token, password]):
-        return Response({"error": "Missing fields"}, status=400)
-
-    try:
-        user = User.objects.get(pk=uid)
-    except User.DoesNotExist:
-        return Response({"error": "Invalid user"}, status=400)
-
-    if not default_token_generator.check_token(user, token):
-        return Response({"error": "Invalid or expired token"}, status=400)
-
-    # PASSWORD RULES
-    if len(password) < 8:
-        return Response({"error": "Password must be at least 8 characters"}, status=400)
-
-    if not re.search(r"[A-Z]", password):
-        return Response({"error": "Must contain at least one uppercase letter"}, status=400)
-
-    if not re.search(r"[0-9]", password):
-        return Response({"error": "Must contain at least one number"}, status=400)
-
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        return Response({"error": "Must contain at least one special character"}, status=400)
-
-    # HASHED AUTOMATICALLY
-    user.set_password(password)
-    user.save()
-
     return Response({"message": "Password reset successful"})

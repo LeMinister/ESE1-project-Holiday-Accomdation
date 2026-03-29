@@ -1,29 +1,34 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./PropertyCard.css";
 
 function PropertyCard({ property }) {
+  const navigate = useNavigate();
+
+  const handleBooking = () => {
+    const user = localStorage.getItem("user");
+
+    if (!user) {
+      // NOT LOGGED IN → REGISTER
+      navigate("/register");
+    } else {
+      // LOGGED IN → BOOK PAGE
+      navigate(`/book/${property.id}`);
+    }
+  };
+
   return (
     <div className="property-card">
-      <img
-        src={property.image}
-        alt={property.name}
-        className="property-image"
-      />
+      <img src={property.image} alt={property.name} />
 
       <div className="property-info">
-        {/* ✅ PROPERTY NAME */}
-        <h3 className="property-title">{property.name}</h3>
+        <h3>{property.name}</h3>
+        <p>{property.description}</p>
+        <p>£{property.price_per_night} / night</p>
 
-        {/* ✅ PROPERTY LOCATION (optional but nice) */}
-        <p className="property-location">{property.location}</p>
-
-        {/* ✅ DESCRIPTION */}
-        <p className="property-description">{property.description}</p>
-
-        {/* ✅ PRICE */}
-        <p className="price">£{property.price_per_night} / night</p>
-
-        <button className="book-btn">Book Now</button>
+        <button onClick={handleBooking} className="book-btn">
+          Book Now
+        </button>
       </div>
     </div>
   );
