@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
+import Header from "./components/Header";
 import Properties from "./pages/Properties";   // 👈 IMPORTANT
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -9,6 +10,7 @@ import ResetPassword from "./pages/ResetPassword";
 function App() {
   return (
     <Router>
+      <Header />
       <Routes>
         {/* HOME PAGE (PUBLIC) */}
         <Route path="/" element={<Properties />} />

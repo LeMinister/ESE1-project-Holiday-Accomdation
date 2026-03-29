@@ -1,16 +1,19 @@
-import React from 'react';
-import './Header.css';
+import React from "react";
+import { Link } from "react-router-dom";
+import "./Header.css";
 
-function Header({ onNavigate }) {
+function Header() {
   return (
     <header className="header">
-      <h1 className="logo">Holiday Booking</h1>
-      <nav>
-        <button onClick={() => onNavigate('register')}>Register</button>
-        <span> | </span>
-        <button onClick={() => onNavigate('login')}>Login</button>
-        <span> | </span>
-        <button onClick={() => onNavigate('manageBooking')}>Manage Booking</button>
+      <div className="logo">
+        🏡 Holiday Accommodations
+      </div>
+
+      <nav className="nav-links">
+        <Link to="/">Home</Link>
+        <Link to="/login">Login</Link>
+        <Link to="/register">Register</Link>
+        <Link to="/bookings">My Bookings</Link>
       </nav>
     </header>
   );
