@@ -6,7 +6,7 @@ export default function ManageBookings() {
   useEffect(() => {
     const user_id = localStorage.getItem("user");
 
-    fetch(`http://localhost:8000/api/bookings/${user_id}/`)
+    fetch(`https://super-chainsaw-pjgv7q7v46pjc6g9q-8000.app.github.dev/api/bookings?user_id=${user_id}`)
       .then(res => res.json())
       .then(data => setBookings(data));
   }, []);

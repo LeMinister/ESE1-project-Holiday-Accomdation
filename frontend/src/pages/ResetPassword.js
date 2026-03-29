@@ -16,7 +16,7 @@ function ResetPassword() {
       return;
     }
 
-    fetch("http://127.0.0.1:8000/api/reset-password/", {
+    fetch("https://super-chainsaw-pjgv7q7v46pjc6g9q-8000.app.github.dev/api/reset-password/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

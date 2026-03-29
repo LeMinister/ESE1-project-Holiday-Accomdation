@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://super-chainsaw-8000.app.github.dev/api/";
 
 export async function getProperties() {
   const res = await fetch(`${API_BASE}/properties/`);

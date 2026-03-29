@@ -1,96 +1,106 @@
 import json
-import uuid
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
-from django.core.mail import send_mail
 
-from .models import Property, Booking
+from .models import Booking, Property
 
 
-def generate_reference():
-    return str(uuid.uuid4())[:10].upper()
-
-
+# -----------------------------
+# REGISTER USER
+# -----------------------------
 @csrf_exempt
 def register(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
     data = json.loads(request.body)
 
-    user = User.objects.create_user(
-        username=data["username"],
-        email=data["email"],
-        password=data["password"]
-    )
+    username = data.get("username")
+    email = data.get("email")
 
-    return JsonResponse({"message": "registered", "user_id": user.id})
+    if not username or not email:
+        return JsonResponse({"error": "Missing fields"}, status=400)
+
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({"error": "Email already exists"}, status=400)
+
+    user = User.objects.create(username=username, email=email)
+
+    return JsonResponse({
+        "message": "User registered",
+        "user_id": user.id
+    })
 
 
+# -----------------------------
+# LOGIN USER (EMAIL ONLY)
+# -----------------------------
 @csrf_exempt
 def login(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
     data = json.loads(request.body)
+    email = data.get("email")
 
-    user = authenticate(
-        username=data["username"],
-        password=data["password"]
-    )
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "Invalid login"}, status=401)
 
-    if user:
-        return JsonResponse({"user_id": user.id})
-
-    return JsonResponse({"error": "invalid"}, status=400)
-
-
-def properties(request):
-    data = list(Property.objects.values())
-    return JsonResponse(data, safe=False)
+    return JsonResponse({
+        "message": "Login successful",
+        "user_id": user.id
+    })
 
 
+# -----------------------------
+# BOOK PROPERTY
+# -----------------------------
 @csrf_exempt
 def book(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
     data = json.loads(request.body)
 
-    user = User.objects.get(id=data["user_id"])
-    property_obj = Property.objects.get(id=data["property_id"])
+    user_id = data.get("user_id")
 
-    ref = generate_reference()
+    if not user_id:
+        return JsonResponse({"error": "Login required"}, status=401)
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "Invalid user"}, status=404)
+
+    property_obj = Property.objects.get(id=data["property"])
 
     booking = Booking.objects.create(
         user=user,
         property=property_obj,
-        check_in=data["check_in"],
-        check_out=data["check_out"],
-        booking_reference=ref
+        guest_name=data.get("guest_name"),
+        guest_email=data.get("guest_email"),
+        check_in=data.get("check_in"),
+        check_out=data.get("check_out")
     )
 
-    send_mail(
-        "Booking Confirmation - StayHub",
-        f"""
-        Your booking is confirmed!
-
-        Property: {property_obj.name}
-        Reference: {ref}
-        Check-in: {booking.check_in}
-        Check-out: {booking.check_out}
-        """,
-        "noreply@stayhub.com",
-        [user.email],
-        fail_silently=True
-    )
-
-    return JsonResponse({"reference": ref})
+    return JsonResponse({
+        "message": "Booking successful",
+        "booking_reference": booking.id
+    })
 
 
-def user_bookings(request, user_id):
+# -----------------------------
+# USER BOOKINGS
+# -----------------------------
+def user_bookings(request):
+    user_id = request.GET.get("user_id")
+
+    if not user_id:
+        return JsonResponse([], safe=False)
+
     bookings = Booking.objects.filter(user_id=user_id)
 
-    data = list(bookings.values(
-        "booking_reference",
-        "check_in",
-        "check_out",
-        "property__name",
-        "property__price_per_night"
-    ))
-
-    return JsonResponse(data, safe=False)
+    return JsonResponse(list(bookings.values()), safe=False)
