@@ -4,13 +4,13 @@ from .models import Property, Booking
 
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
-    list_display = ("name", "price", "property_type")
-    search_fields = ("name", "property_type")
+    list_display = ("id", "name", "price_per_night", "property_type")
 
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "reference",
         "user",
         "property",
@@ -19,5 +19,4 @@ class BookingAdmin(admin.ModelAdmin):
         "total_price",
     )
 
-    list_filter = ("start_date", "end_date")
-    search_fields = ("reference", "user__username", "property__name")
+    search_fields = ("reference", "user__username")
