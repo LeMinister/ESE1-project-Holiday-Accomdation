@@ -1,26 +1,32 @@
-import React, { useEffect, useState } from "react";
-import { getProperties } from "../services/api";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api";
 
-function Home() {
-  const [properties, setProperties] = useState([]);
+export default function Home() {
+  const [data, setData] = useState([]);
+  const nav = useNavigate();
 
   useEffect(() => {
-    getProperties().then(setProperties);
+    fetch(`${API}/properties/`)
+      .then(r => r.json())
+      .then(setData);
   }, []);
 
   return (
     <div>
-      <h1>Holiday Accommodation</h1>
+      <h1>Properties</h1>
 
-      {properties.map((p) => (
-        <div key={p.id}>
+      {data.map(p => (
+        <div className="card" key={p.id}>
           <h3>{p.name}</h3>
-          <p>{p.location}</p>
+          <p>{p.description}</p>
           <p>£{p.price_per_night}</p>
+
+          <button onClick={() => nav(`/book/${p.id}`)}>
+            Book
+          </button>
         </div>
       ))}
     </div>
   );
 }
-
-export default Home;

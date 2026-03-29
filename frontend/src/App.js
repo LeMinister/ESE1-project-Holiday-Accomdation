@@ -1,34 +1,33 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
 
-import Properties from "./pages/Properties";
-import Register from "./pages/Register";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import Register from "./pages/Register";
 import BookProperty from "./pages/BookProperty";
+import ManageBookings from "./pages/ManageBookings";
 
-function App() {
+export default function App() {
   return (
-    <Router>
+    <BrowserRouter>
+      {/* NAVBAR ALWAYS VISIBLE */}
       <Header />
 
       <Routes>
-        {/* HOME PAGE */}
-        <Route path="/" element={<Properties />} />
+        {/* HOME / PROPERTY LIST */}
+        <Route path="/" element={<Home />} />
 
-        {/* AUTH */}
-        <Route path="/register" element={<Register />} />
+        {/* AUTH PAGES */}
         <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* BOOKING */}
+        {/* BOOKING FLOW */}
         <Route path="/book/:id" element={<BookProperty />} />
+
+        {/* USER BOOKINGS */}
+        <Route path="/bookings" element={<ManageBookings />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
-
-export default App;

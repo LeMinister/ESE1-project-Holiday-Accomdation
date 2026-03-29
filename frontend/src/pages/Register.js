@@ -1,50 +1,29 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api";
 
-function Register() {
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
+export default function Register() {
+  const nav = useNavigate();
+  const [form, setForm] = useState({});
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const res = await fetch("https://super-chainsaw-pjgv7q7v46pjc6g9q-8000.app.github.dev/api/register/", {
+  const submit = async () => {
+    await fetch(`${API}/register/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(form)
     });
 
-    const data = await res.json();
-    alert(JSON.stringify(data));
+    alert("Registered!");
+    nav("/login");
   };
 
   return (
     <div>
-      <h2>Register</h2>
-
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Username"
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
-        />
-        <input
-          placeholder="Email"
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-        />
-
-        <button type="submit">Register</button>
-      </form>
+      <h1>Register</h1>
+      <input onChange={e=>setForm({...form, username:e.target.value})}/>
+      <input onChange={e=>setForm({...form, email:e.target.value})}/>
+      <input type="password" onChange={e=>setForm({...form, password:e.target.value})}/>
+      <button onClick={submit}>Register</button>
     </div>
   );
 }
-
-export default Register;
