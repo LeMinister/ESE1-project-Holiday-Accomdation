@@ -16,7 +16,7 @@ function BookProperty() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/book/", {
+      const response = await fetch("https://super-chainsaw-pjgv7q7v46pjc6g9q-8000.app.github.dev/api/book/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

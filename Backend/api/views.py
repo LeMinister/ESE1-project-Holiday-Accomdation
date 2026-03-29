@@ -1,107 +1,193 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.conf import settings
 
-from datetime import datetime
-import uuid
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from .models import Property, Booking
-from .serializers import PropertySerializer
+
+import json
+import uuid
+from datetime import datetime
 
 
-# 🔹 GET ALL PROPERTIES
-@api_view(["GET"])
-def property_list(request):
-    properties = Property.objects.all()
-    serializer = PropertySerializer(properties, many=True)
-    return Response(serializer.data)
+# ==============================
+# 📦 GET ALL PROPERTIES
+# ==============================
+class PropertyListView(APIView):
+    def get(self, request):
+        properties = Property.objects.all()
+
+        data = []
+        for p in properties:
+            data.append({
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "image": p.image,
+                "property_type": p.property_type,
+                "price_per_night": str(p.price_per_night),
+            })
+
+        return Response(data)
 
 
-# 🔹 CREATE BOOKING
-@api_view(["POST"])
-def create_booking(request):
-    user_id = request.data.get("user_id")
-    property_id = request.data.get("property_id")
-    start_date = request.data.get("start_date")
-    end_date = request.data.get("end_date")
+# ==============================
+# 🧾 REGISTER USER
+# ==============================
+@csrf_exempt
+def register_user(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
 
-    # VALIDATION
-    if not all([user_id, property_id, start_date, end_date]):
-        return Response({"error": "Missing fields"}, status=400)
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
 
-    try:
-        user = User.objects.get(id=user_id)
-        property = Property.objects.get(id=property_id)
-    except:
-        return Response({"error": "Invalid user or property"}, status=404)
+        # Check if email exists
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"error": "Email already registered"}, status=400)
 
-    # CALCULATE DAYS
-    start = datetime.strptime(start_date, "%Y-%m-%d")
-    end = datetime.strptime(end_date, "%Y-%m-%d")
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
 
-    if end <= start:
-        return Response({"error": "End date must be after start date"}, status=400)
+        return JsonResponse({"message": "User created successfully"})
 
-    days = (end - start).days
-    total_price = days * property.price_per_night
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
-    # GENERATE REFERENCE
-    reference = str(uuid.uuid4())[:8]
 
-    # CREATE BOOKING
-    booking = Booking.objects.create(
-        user=user,
-        property=property,
-        start_date=start_date,
-        end_date=end_date,
-        total_price=total_price,
-        reference=reference
-    )
+# ==============================
+# 🏨 BOOK PROPERTY
+# ==============================
+@csrf_exempt
+def book_property(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
 
-    # SEND EMAIL
-    send_mail(
-        subject="Booking Confirmation",
-        message=f"""
+            property_id = data.get("property_id")
+            start_date = data.get("start_date")
+            end_date = data.get("end_date")
+            user_id = data.get("user_id")  # simple for now
+
+            property_obj = Property.objects.get(id=property_id)
+            user = User.objects.get(id=user_id)
+
+            # Calculate nights
+            start = datetime.strptime(start_date, "%Y-%m-%d")
+            end = datetime.strptime(end_date, "%Y-%m-%d")
+            nights = (end - start).days
+
+            if nights <= 0:
+                return JsonResponse({"error": "Invalid dates"}, status=400)
+
+            total_price = nights * float(property_obj.price_per_night)
+
+            # Create booking
+            booking = Booking.objects.create(
+                user=user,
+                property=property_obj,
+                start_date=start_date,
+                end_date=end_date,
+                total_price=total_price,
+                reference=str(uuid.uuid4()).replace("-", "")[:10].upper()
+            )
+
+            # Send email
+            send_mail(
+                subject="Booking Confirmation",
+                message=f"""
 Booking Confirmed!
 
-Property: {property.name}
-Location: {property.location}
-
+Reference: {booking.reference}
+Property: {property_obj.name}
 Dates: {start_date} to {end_date}
 Total Price: £{total_price}
+                """,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
 
-Reference Number: {reference}
+            return JsonResponse({
+                "message": "Booking successful",
+                "reference": booking.reference
+            })
 
-Thank you for booking with us!
-""",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
 
-    return Response({
-        "message": "Booking confirmed! Email sent.",
-        "reference": reference
-    })
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-# 🔹 FORGOT PASSWORD
-@api_view(["POST"])
+# ==============================
+# 🔑 FORGOT PASSWORD
+# ==============================
+@csrf_exempt
 def forgot_password(request):
-    email = request.data.get("email")
+    if request.method == "POST":
+        data = json.loads(request.body)
+        email = data.get("email")
 
-    if not User.objects.filter(email=email).exists():
-        return Response({
-            "error": "Email not registered. Please sign up."
-        }, status=400)
+        try:
+            user = User.objects.get(email=email)
 
-    return Response({"message": "Password reset email sent"})
+            uid = urlsafe_base64_encode(str(user.pk).encode())
+            token = default_token_generator.make_token(user)
+
+            reset_link = f"http://localhost:3000/reset-password/{uid}/{token}"
+
+            send_mail(
+                subject="Password Reset",
+                message=f"Click the link to reset your password:\n{reset_link}",
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email],
+                fail_silently=True,
+            )
+
+            return JsonResponse({"message": "Reset email sent"})
+
+        except User.DoesNotExist:
+            return JsonResponse({
+                "error": "Email not registered. Please sign up."
+            }, status=400)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-# 🔹 RESET PASSWORD
-@api_view(["POST"])
+# ==============================
+# 🔁 RESET PASSWORD
+# ==============================
+@csrf_exempt
 def reset_password(request):
-    return Response({"message": "Password reset successful"})
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        uid = data.get("uid")
+        token = data.get("token")
+        new_password = data.get("password")
+
+        try:
+            user_id = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=user_id)
+
+            if default_token_generator.check_token(user, token):
+                user.set_password(new_password)
+                user.save()
+                return JsonResponse({"message": "Password reset successful"})
+            else:
+                return JsonResponse({"error": "Invalid token"}, status=400)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
