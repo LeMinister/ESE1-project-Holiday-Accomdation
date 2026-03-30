@@ -6,4 +6,7 @@ urlpatterns = [
     path("login/", views.login),
     path("book/", views.book),
     path("bookings/", views.user_bookings),
+
+    # ✅ ADD THIS
+    path("properties/", views.properties),
 ]

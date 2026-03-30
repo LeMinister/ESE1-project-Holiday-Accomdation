@@ -1,25 +1,15 @@
 import React, { useEffect, useState } from "react";
 import PropertyCard from "../components/PropertyCard";
+import API from "../api";
 import "./Properties.css";
 
 function Properties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
-  const API_URL =
-    "https://super-chainsaw-pjgv7q7v46pjc6g9q-8000.app.github.dev/api/properties/";
-
   useEffect(() => {
-    fetch(API_URL)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        return response.json();
-      })
+    API.getProperties()
       .then((data) => {
-        console.log("API DATA:", data); // 🔍 helps debug
         setProperties(data);
         setLoading(false);
       })
@@ -27,7 +17,7 @@ function Properties() {
         console.error("Error fetching properties:", error);
         setLoading(false);
       });
-  }, [API_URL]);
+  }, []);
 
   if (loading) {
     return <p style={{ textAlign: "center" }}>Loading properties...</p>;

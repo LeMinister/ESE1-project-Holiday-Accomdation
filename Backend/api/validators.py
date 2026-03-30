@@ -9,6 +9,9 @@ class CustomPasswordValidator:
         if not re.search(r"[A-Z]", password):
             raise ValidationError("Password must contain at least one uppercase letter.")
 
+        if not re.search(r"[a-z]", password):
+            raise ValidationError("Password must contain at least one lowercase letter.")
+
         if not re.search(r"[0-9]", password):
             raise ValidationError("Password must contain at least one number.")
 
@@ -16,4 +19,4 @@ class CustomPasswordValidator:
             raise ValidationError("Password must contain at least one special character.")
 
     def get_help_text(self):
-        return "Password must be 8+ chars, include uppercase, number and special character."
+        return "Password must be 8+ chars, include uppercase, lowercase, number and special character."
