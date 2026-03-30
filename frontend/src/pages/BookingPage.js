@@ -1,45 +1,99 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api";
+import { getAccessToken } from "../auth";
 
 export default function Book() {
   const { id } = useParams();
   const nav = useNavigate();
 
-  const [form, setForm] = useState({});
+  const [form, setForm] = useState({
+    check_in: "",
+    check_out: ""
+  });
 
-  const submit = async () => {
-    const user = localStorage.getItem("user_id");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const res = await fetch(`${API}/book/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user,
-        property: id,
-        ...form
-      })
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
     });
+  };
 
-    const data = await res.json();
+  const submitBooking = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    alert("Booking ref: " + data.booking_reference);
-    nav("/bookings");
+    const token = getAccessToken();
+
+    if (!token) {
+      setError("You must be logged in to book");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/book/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          property: id,
+          check_in: form.check_in,
+          check_out: form.check_out
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError("Booking failed");
+        setLoading(false);
+        return;
+      }
+
+      alert(`Booking successful! Ref: ${data.booking_reference}`);
+      nav("/bookings");
+
+    } catch (err) {
+      setError("Server error. Try again.");
+    }
+
+    setLoading(false);
   };
 
   return (
-    <div>
-      <h1>Book</h1>
+    <div style={{ maxWidth: "400px", margin: "auto" }}>
+      <h1>Book Property</h1>
 
-      <input type="date"
-        onChange={e => setForm({ ...form, check_in: e.target.value })}
-      />
+      <form onSubmit={submitBooking}>
+        <label>Check In</label>
+        <input
+          type="date"
+          name="check_in"
+          value={form.check_in}
+          onChange={handleChange}
+        />
 
-      <input type="date"
-        onChange={e => setForm({ ...form, check_out: e.target.value })}
-      />
+        <label>Check Out</label>
+        <input
+          type="date"
+          name="check_out"
+          value={form.check_out}
+          onChange={handleChange}
+        />
 
-      <button onClick={submit}>Confirm</button>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Booking..." : "Book Now"}
+        </button>
+      </form>
     </div>
   );
 }

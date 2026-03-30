@@ -1,18 +1,34 @@
-from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
-from django.views.decorators.csrf import csrf_exempt
-import json
+from django.http import JsonResponse
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .models import Property, Booking
 
 
 # -------------------------
-# GET PROPERTIES (PUBLIC)
+# PUBLIC: REGISTER
+# -------------------------
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def register(request):
+    data = request.data
+
+    username = data.get("username")
+    password = data.get("password")
+
+    if User.objects.filter(username=username).exists():
+        return Response({"error": "User already exists"}, status=400)
+
+    User.objects.create_user(username=username, password=password)
+
+    return Response({"message": "User created"})
+
+
+# -------------------------
+# PUBLIC: PROPERTIES
 # -------------------------
 def properties(request):
     props = Property.objects.all().values()
@@ -20,7 +36,7 @@ def properties(request):
 
 
 # -------------------------
-# CREATE BOOKING (JWT PROTECTED)
+# PROTECTED: BOOKING
 # -------------------------
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -44,7 +60,7 @@ def book(request):
 
 
 # -------------------------
-# USER BOOKINGS (JWT PROTECTED)
+# PROTECTED: USER BOOKINGS
 # -------------------------
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

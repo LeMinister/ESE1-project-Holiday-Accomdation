@@ -19,20 +19,13 @@ class Booking(models.Model):
     check_in = models.DateField()
     check_out = models.DateField()
 
-    booking_reference = models.CharField(
-        max_length=12,
-        unique=True,
-        editable=False
-    )
-
+    booking_reference = models.CharField(max_length=12, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        # Auto-generate booking reference if not set
         if not self.booking_reference:
             self.booking_reference = str(uuid.uuid4()).replace("-", "")[:12].upper()
-
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.booking_reference} - {self.property.name}"
+        return self.booking_reference

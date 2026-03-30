@@ -5,4 +5,7 @@ urlpatterns = [
     path("properties/", views.properties),
     path("book/", views.book),
     path("my-bookings/", views.user_bookings),
+
+    # PUBLIC REGISTER
+    path("register/", views.register),
 ]

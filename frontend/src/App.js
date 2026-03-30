@@ -1,40 +1,58 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Header from "./components/Header";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import BookProperty from "./pages/BookProperty";
-import Header from "./components/Header";
+import Book from "./pages/BookingPage";
+import Bookings from "./pages/BookProperty";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <Router>
-      <Header /> {/* stays ALWAYS visible */}
+    <BrowserRouter>
+
+      {/* HEADER ALWAYS VISIBLE */}
+      <Header />
 
       <Routes>
-        {/* public routes */}
+
+        {/* PUBLIC ROUTES */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* protected routes */}
+        {/* PROTECTED ROUTES */}
         <Route
           path="/"
           element={
-
+            <ProtectedRoute>
               <Home />
-
+            </ProtectedRoute>
           }
         />
 
         <Route
-          path="/book"
+          path="/book/:id"
           element={
-
-              <BookProperty />
-
+            <ProtectedRoute>
+              <Book />
+            </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute>
+              <Bookings />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 
