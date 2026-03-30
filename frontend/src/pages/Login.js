@@ -16,7 +16,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch(`${API}/login/`, {
+      const res = await fetch(`${API}/token/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -25,12 +25,12 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Login failed");
+        setError("Invalid login");
         return;
       }
 
-      // store user session (simple version)
-      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
 
       alert("Login successful");
       nav("/");
@@ -44,8 +44,16 @@ export default function Login() {
     <div>
       <h1>Login</h1>
 
-      <input placeholder="Username" onChange={e => setForm({ ...form, username: e.target.value })} />
-      <input type="password" placeholder="Password" onChange={e => setForm({ ...form, password: e.target.value })} />
+      <input
+        placeholder="Username"
+        onChange={e => setForm({ ...form, username: e.target.value })}
+      />
+
+      <input
+        type="password"
+        placeholder="Password"
+        onChange={e => setForm({ ...form, password: e.target.value })}
+      />
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
